@@ -18,3 +18,12 @@ app = FastAPI() # erstellt die FastAPI APP
 @app.get("/get_tasks") # definiert den Endpunkt /get_tasks, den der Kenny im Frontend benutzt um die Tasks aus der Datenbank zu holen
 def get_tasks():  # definiert die Funktion get_Tasks
     return read_Tasks() #benutzt die sovor im db_manager definierte Funktion read_Tasks, um die Tasks aus der Datenbank zu holen und auszugeben
+
+
+@app.get("/get_task/{id}") # definiert den Endpunkt um genau EINE Task zu holen
+def get_task(id: int): # Funktion um genau ein Task zu holen bei der die ID eine Zahl sein muss
+    tasks = read_Tasks() # holt erstmal alle Tasks aus der Datenabnk weil akutell keine Funktion existiert die nur genau eine Task holen kann 
+    for task in tasks: # for Schleife um alle Tasks durchzugehen und zu checken ob deren ID mit der gesuchten ID übereinstimmt
+        if task.id == id: # wenn die ID übereinstimmt, ird die Task ausgegeben
+            return task  
+    return {"error": "Task not found"} # wenn keine Taks mit der ID gefunden wird, gibt es eine Fehlermeldung
