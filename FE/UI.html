@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
@@ -110,6 +110,51 @@
       transform: translateY(-1px);
     }
 
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .icon-btn {
+      position: relative;
+      width: 46px;
+      height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 21px;
+      box-shadow: var(--shadow-soft);
+      transition: transform 0.18s ease, border-color 0.18s ease;
+    }
+
+    .icon-btn:hover {
+      border-color: rgba(79, 70, 229, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      min-width: 20px;
+      height: 20px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: var(--danger);
+      color: white;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
     .task-list {
       display: grid;
       gap: 14px;
@@ -133,6 +178,11 @@
       border-color: rgba(79, 70, 229, 0.34);
       box-shadow: var(--shadow);
       transform: translateY(-2px);
+    }
+
+    .task-card.focused {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.16), var(--shadow);
     }
 
     .task-title {
@@ -197,6 +247,189 @@
       color: #3730a3;
       font-size: 13px;
       margin-bottom: 0;
+    }
+
+    .calendar-panel {
+      display: none;
+      margin-top: 22px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(219, 227, 238, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .calendar-header h2 {
+      font-size: 20px;
+    }
+
+    .calendar-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .calendar-control {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .calendar-weekdays,
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    .calendar-weekdays span {
+      padding: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .calendar-day {
+      min-height: 118px;
+      padding: 6px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: #ffffff;
+      overflow: visible;
+    }
+
+    .calendar-day:nth-child(7n) {
+      border-right: none;
+    }
+
+    .calendar-day.muted {
+      background: #f8fafc;
+      color: var(--muted);
+    }
+
+    .calendar-date {
+      margin-bottom: 5px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .calendar-marker {
+      position: relative;
+      z-index: 1;
+      display: block;
+      box-sizing: border-box;
+      width: 100%;
+      height: 18px;
+      min-height: 18px;
+      margin: 0 0 3px 0;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 800;
+      text-align: left;
+      line-height: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .calendar-marker.continues-left {
+      margin-left: -7px;
+      width: calc(100% + 7px);
+      padding-left: 12px;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    .calendar-marker.continues-right {
+      width: calc(100% + 7px);
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    .calendar-marker.continues-left.continues-right {
+      width: calc(100% + 14px);
+    }
+
+    .priority-color-1 { background: #64748b; }
+    .priority-color-2 { background: #0f766e; }
+    .priority-color-3 { background: #2563eb; }
+    .priority-color-4 { background: #d97706; }
+    .priority-color-5 { background: #dc2626; }
+
+    .notification-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .notification-item {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+    }
+
+    .notification-item strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .notification-item span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .calendar-task-link {
+      grid-column: 1 / -1;
+      width: 100%;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .calendar-task-link:hover {
+      border-color: rgba(79, 70, 229, 0.45);
+      background: #ffffff;
+    }
+
+    .calendar-task-link strong,
+    .history-list strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--text);
+    }
+
+    .calendar-task-link span,
+    .history-list span {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 9px;
     }
 
     .modal {
@@ -396,6 +629,15 @@
         width: 100%;
       }
 
+      .header-actions {
+        width: 100%;
+        justify-content: stretch;
+      }
+
+      .header-actions .create-btn {
+        flex: 1;
+      }
+
       .task-date {
         min-width: 0;
         text-align: left;
@@ -412,6 +654,20 @@
       .actions {
         flex-direction: column;
       }
+
+      .calendar-day {
+        min-height: 86px;
+        padding: 4px;
+      }
+
+      .calendar-marker {
+        height: 15px;
+        min-height: 15px;
+        margin-bottom: 2px;
+        padding: 1px 3px;
+        font-size: 9px;
+        line-height: 13px;
+      }
     }
   </style>
 </head>
@@ -425,64 +681,40 @@
         <p>Behalte Prioritäten, Verantwortliche und Fristen übersichtlich im Blick.</p>
       </div>
 
-      <button class="create-btn" onclick="openCreateModal()">
-        Aufgabe erstellen
-      </button>
+      <div class="header-actions">
+        <button class="icon-btn" type="button" onclick="toggleCalendar()" title="Kalender">📅</button>
+        <button class="icon-btn" type="button" onclick="openNotifications()" title="Benachrichtigungen">
+          🔔
+          <span class="notification-badge" id="notificationBadge">0</span>
+        </button>
+        <button class="create-btn" onclick="openCreateModal()">
+          Aufgabe erstellen
+        </button>
+      </div>
     </div>
 
     <div class="task-list" id="taskList">
-      <div class="task-card" onclick="openDetailModal(
-        this,
-        'Frontend erstellen',
-        'Komplette Benutzeroberfläche entwickeln',
-        '5',
-        '21.05.2026',
-        'Max Mustermann',
-        '30.05.2026'
-        // Nach Verbinden der API kann das hier raus
-      )">
-        <div>
-          <div class="task-title">Frontend erstellen</div>
-          <p class="task-summary">Komplette Benutzeroberfläche entwickeln</p>
+      <p class="task-summary">Aufgaben werden geladen...</p>
+    </div>
 
-          <div class="task-meta">
-            <span class="priority">Priorität: 5</span>
-            <span class="meta-pill">Max Mustermann</span>
-          </div>
-        </div>
-
-        <div class="task-date">
-          <span>Ablaufdatum</span>
-          30.05.2026
+    <div class="calendar-panel" id="calendarPanel">
+      <div class="calendar-header">
+        <h2 id="calendarTitle">Kalender</h2>
+        <div class="calendar-controls">
+          <button class="calendar-control" type="button" onclick="changeCalendarMonth(-1)">‹</button>
+          <button class="calendar-control" type="button" onclick="changeCalendarMonth(1)">›</button>
         </div>
       </div>
-
-      <div class="task-card" onclick="openDetailModal(
-        this,
-        'API verbinden',
-        'CRUD API mit Backend verbinden',
-        '4',
-        '20.05.2026',
-        'Anna Schmidt',
-        '28.05.2026'
-        // Nach Verbinden der API kann das hier raus
-
-      )">
-        <div>
-          <div class="task-title">API verbinden</div>
-          <p class="task-summary">CRUD API mit Backend verbinden</p>
-
-          <div class="task-meta">
-            <span class="priority">Priorität: 4</span>
-            <span class="meta-pill">Anna Schmidt</span>
-          </div>
-        </div>
-
-        <div class="task-date">
-          <span>Ablaufdatum</span>
-          28.05.2026
-        </div>
+      <div class="calendar-weekdays">
+        <span>Mo</span>
+        <span>Di</span>
+        <span>Mi</span>
+        <span>Do</span>
+        <span>Fr</span>
+        <span>Sa</span>
+        <span>So</span>
       </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
     </div>
   </div>
 
@@ -523,6 +755,11 @@
         <div class="detail-row">
           <strong>Ablaufdatum</strong>
           <span id="detailDeadline"></span>
+        </div>
+
+        <div class="detail-row full">
+          <strong>Änderungshistorie</strong>
+          <div class="history-list" id="detailHistory"></div>
         </div>
       </div>
 
@@ -582,6 +819,28 @@
           Aufgabe speichern
         </button>
       </form>
+    </div>
+  </div>
+
+  <div class="modal" id="calendarTaskModal">
+    <div class="modal-content">
+      <span class="close" onclick="closeCalendarTaskModal()">
+        &times;
+      </span>
+
+      <h2 id="calendarTaskTitle">Task im Kalender</h2>
+      <div class="detail-grid" id="calendarTaskDetails"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="notificationModal">
+    <div class="modal-content">
+      <span class="close" onclick="closeNotifications()">
+        &times;
+      </span>
+
+      <h2>Benachrichtigungen</h2>
+      <div class="notification-list" id="notificationList"></div>
     </div>
   </div>
 
