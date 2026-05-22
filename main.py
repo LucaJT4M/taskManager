@@ -1,6 +1,8 @@
 import sqlite3
 from fastapi import FastAPI
 
+
+# Klasse Definierung für Task
 class Task: 
     def __init__(self, id: int, title: str, conclusion: str, Priority: int, Date: sqlite3.Date,User_Name: str, Expire_Date: sqlite3.Date):
         self.id = id
@@ -40,6 +42,9 @@ def read_Tasks() -> list[Task]: #gibt eine Liste von Tasks zurpück
         redo.append(Task1) #fügt die einträge an die richtige Stelle in der Liste ein, bsp. Eintrag 5 wird hinzugefügt und "append" fügt den Eintrag an die 5. Stelle der Liste hinzu
     return redo # gibt die Variable redo zurück, damit andere Funktionen sie auch benutzen können
 
+
+# crud Tasks
+
 def create_Task(to_add_Task: Task):#erstellt Tasks in der Datenbank
     conn = sqlite3.connect("tasks.db")
     kirkler = conn.cursor()
@@ -54,6 +59,17 @@ def delete_Task(id: int): #löscht Tasks aus der Datenbank
     conn.commit()
     conn.close()
 
+def update_Task(id: int, updated_Task: Task): #aktualisiert Tasks in der Datenbank
+    conn = sqlite3.connect("tasks.db")
+    kirkler = conn.cursor()
+    kirkler.execute("UPDATE tasks SET title=?, conclusion=?, Priority=?, Date=?, User_Name=?, Expire_Date=? WHERE id=?", (updated_Task.title, updated_Task.conclusion, updated_Task.Priority, updated_Task.Date, updated_Task.User_Name, updated_Task.Expire_Date, id)) #aktualisiert die Einträge mit jeweiligen ID in der Datenbank mit Wertern updated_Task
+    conn.commit()
+    conn.close()
+
+
+# Beispielnutzung der Funktionen
+
+
 Task1 = Task(0, "Task1", "Task1 abschließen", 1, "2007-12-13", "User1", "2024-06-30") #beispiel Task, um zu testen ob die Funktionen funktionieren
 ensure_table_exists() #checkt ob Tabelle existiert
 
@@ -63,3 +79,4 @@ for Task in GIG: #durchforstet alle Tasks in GIG und gibt sie aus
     print(f"ID: {Task.id}, Title: {Task.title}, Conclusion: {Task.conclusion}, Priority: {Task.Priority}, Date: {Task.Date}, User_Name: {Task.User_Name}, Expire_Date: {Task.Expire_Date}") #geht eine task nach der anderen in GIG durch und gibt sie aus
 
 delete_Task(1) #löscht die beispile ID1 
+ 
