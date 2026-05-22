@@ -49,8 +49,10 @@ def create_Task(to_add_Task: Task):#erstellt Tasks in der Datenbank
     conn = sqlite3.connect("tasks.db")
     kirkler = conn.cursor()
     kirkler.execute("INSERT INTO tasks (title,conclusion,Priority,Date,User_Name,Expire_Date) VALUES (?,?,?,?,?,?)", (to_add_Task.title, to_add_Task.conclusion, to_add_Task.Priority, to_add_Task.Date, to_add_Task.User_Name, to_add_Task.Expire_Date)) #added die Werte aus to_add_Task in die Datenbank ein
+    Task_ID = kirkler.lastrowid #holt die ID der soeben erstellten Task
     conn.commit()
     conn.close()
+    return Task(id=Task_ID, title=to_add_Task.title, conclusion=to_add_Task.conclusion, Priority=to_add_Task.Priority, Date=to_add_Task.Date, User_Name=to_add_Task.User_Name, Expire_Date=to_add_Task.Expire_Date) #gibt die soeben erstellte Task zurück mit der ID die sie in der Datenbank bekommen hat
 
 def delete_Task(id: int): #löscht Tasks aus der Datenbank
     conn = sqlite3.connect("tasks.db")
