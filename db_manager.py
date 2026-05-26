@@ -1,17 +1,15 @@
 import sqlite3
+from pydantic import BaseModel
 
 # Klasse Definierung für Task
-class Task: 
-    def __init__(self, id: int, title: str, conclusion: str, Priority: int, Date: sqlite3.Date,User_Name: str, Expire_Date: sqlite3.Date):
-        self.id = id
-        self.title = title
-        self.conclusion = conclusion
-        self.Priority = Priority
-        self.Date = Date
-        self.User_Name = User_Name
-        self.Expire_Date = Expire_Date
-
-
+class Task(BaseModel): 
+    id: int | None = None
+    title: str
+    conclusion: str
+    priority: int
+    date: str
+    user_name: str
+    expire_date: str
 
 def ensure_table_exists():
     conn = sqlite3.connect('tasks.db') #baut verbindung zur datenbank auf
@@ -21,10 +19,10 @@ def ensure_table_exists():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             conclusion TEXT,
-            Priority INTEGER,
-            Date DATE,
-            User_Name TEXT,
-            Expire_Date DATE
+            priority INTEGER,
+            date DATE,
+            user_name TEXT,
+            expire_date DATE
         )
     ''')    # Tabelle wird erstellt, wenn es sie noch nicht gibt, mit den hier definierten Spalten
     conn.commit()
@@ -38,7 +36,7 @@ def read_Tasks() -> list[Task]: #gibt eine Liste von Tasks zurpück
     conn.close()
     redo = []
     for Aufg in tasks:
-        Task1 = Task(Aufg[0], Aufg[1], Aufg[2], Aufg[3], Aufg[4], Aufg[5], Aufg[6]) #wandelt die Einträge aus der Datenbank in Einträge fürs Programm um
+        Task1 = Task(id=Aufg[0], title=Aufg[1], conclusion=Aufg[2], priority=Aufg[3], date=Aufg[4], user_name=Aufg[5], expire_date=Aufg[6]) #wandelt die Einträge aus der Datenbank in Einträge fürs Programm um
         redo.append(Task1) #fügt die einträge an die richtige Stelle in der Liste ein, bsp. Eintrag 5 wird hinzugefügt und "append" fügt den Eintrag an die 5. Stelle der Liste hinzu
     return redo # gibt die Variable redo zurück, damit andere Funktionen sie auch benutzen können
 
@@ -48,11 +46,11 @@ def read_Tasks() -> list[Task]: #gibt eine Liste von Tasks zurpück
 def create_Task(to_add_Task: Task):#erstellt Tasks in der Datenbank
     conn = sqlite3.connect("tasks.db")
     kirkler = conn.cursor()
-    kirkler.execute("INSERT INTO tasks (title,conclusion,Priority,Date,User_Name,Expire_Date) VALUES (?,?,?,?,?,?)", (to_add_Task.title, to_add_Task.conclusion, to_add_Task.Priority, to_add_Task.Date, to_add_Task.User_Name, to_add_Task.Expire_Date)) #added die Werte aus to_add_Task in die Datenbank ein
+    kirkler.execute("INSERT INTO tasks (title,conclusion,priority,date,user_name,expire_date) VALUES (?,?,?,?,?,?)", (to_add_Task.title, to_add_Task.conclusion, to_add_Task.priority, to_add_Task.date, to_add_Task.user_name, to_add_Task.expire_date)) #added die Werte aus to_add_Task in die Datenbank ein
     Task_ID = kirkler.lastrowid #holt die ID der soeben erstellten Task
     conn.commit()
     conn.close()
-    return Task(id=Task_ID, title=to_add_Task.title, conclusion=to_add_Task.conclusion, Priority=to_add_Task.Priority, Date=to_add_Task.Date, User_Name=to_add_Task.User_Name, Expire_Date=to_add_Task.Expire_Date) #gibt die soeben erstellte Task zurück mit der ID die sie in der Datenbank bekommen hat
+    return Task(id=Task_ID, title=to_add_Task.title, conclusion=to_add_Task.conclusion, priority=to_add_Task.priority, date=to_add_Task.date, user_name=to_add_Task.user_name, expire_date=to_add_Task.expire_date) #gibt die soeben erstellte Task zurück mit der ID die sie in der Datenbank bekommen hat
 
 def delete_Task(id: int): #löscht Tasks aus der Datenbank
     conn = sqlite3.connect("tasks.db")
@@ -64,6 +62,6 @@ def delete_Task(id: int): #löscht Tasks aus der Datenbank
 def update_Task(id: int, updated_Task: Task): #aktualisiert Tasks in der Datenbank
     conn = sqlite3.connect("tasks.db")
     kirkler = conn.cursor()
-    kirkler.execute("UPDATE tasks SET title=?, conclusion=?, Priority=?, Date=?, User_Name=?, Expire_Date=? WHERE id=?", (updated_Task.title, updated_Task.conclusion, updated_Task.Priority, updated_Task.Date, updated_Task.User_Name, updated_Task.Expire_Date, id)) #aktualisiert die Einträge mit jeweiligen ID in der Datenbank mit Wertern updated_Task
+    kirkler.execute("UPDATE tasks SET title=?, conclusion=?, priority=?, date=?, user_name=?, expire_date=? WHERE id=?", (updated_Task.title, updated_Task.conclusion, updated_Task.priority, updated_Task.date, updated_Task.user_name, updated_Task.expire_date, id)) #aktualisiert die Einträge mit jeweiligen ID in der Datenbank mit Wertern updated_Task
     conn.commit()
     conn.close()
