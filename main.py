@@ -19,8 +19,10 @@ ensure_table_exists() # überprüft ob die Tabelle in der Datenbank existiert.
 app = FastAPI() # erstellt die FastAPI APP 
 
 origins = [
-    "http://localhost:5500"   # erlaubt dem Kenny im Frotend auf die ApI im Backend zuzugreifen.
+    "http://127.0.0.1:5500", # erlaubt dem Kenny im Frotend auf die ApI im Backend zuzugreifen.
+    "http://localhost:5500",
 ]
+
 
 app.add_middleware(                     
     CORSMiddleware,
