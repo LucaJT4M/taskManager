@@ -47,10 +47,10 @@ function mapApiTask(apiTask, ticketNumber) { // Wandelt eine Backend-Aufgabe in 
     ticketNumber, // Laufende Nummer für die Anzeige.
     title: apiTask.title, // Titel aus dem Backend.
     summary: apiTask.conclusion || "", // Beschreibung aus dem Backend oder leerer Text.
-    priority: String(apiTask.Priority || ""), // Priorität als String, passend zum Formularwert.
-    created: normalizeDate(apiTask.Date), // Erstelldatum im Eingabeformat yyyy-mm-dd.
-    creator: apiTask.User_Name || "", // Name des Erstellers.
-    deadline: normalizeDate(apiTask.Expire_Date), // Ablaufdatum im Eingabeformat yyyy-mm-dd.
+    priority: String(apiTask.priority ?? apiTask.Priority ?? ""), // Priorität als String, passend zum Formularwert.
+    created: normalizeDate(apiTask.date ?? apiTask.Date), // Erstelldatum im Eingabeformat yyyy-mm-dd.
+    creator: apiTask.user_name ?? apiTask.User_Name ?? "", // Name des Erstellers.
+    deadline: normalizeDate(apiTask.expire_date ?? apiTask.Expire_Date), // Ablaufdatum im Eingabeformat yyyy-mm-dd.
     history: [ // Startet die Historie mit einem Ladeeintrag.
       {
         action: "Aus Backend geladen", // Text des Historieneintrags.
@@ -58,6 +58,49 @@ function mapApiTask(apiTask, ticketNumber) { // Wandelt eine Backend-Aufgabe in 
       }
     ]
   };
+}
+
+function mapUiTaskToApiTask(task) { // Wandelt eine UI-Aufgabe in das Format des FastAPI-Backends um.
+  return {
+    id: Number.isInteger(Number(task.id)) ? Number(task.id) : null,
+    title: task.title,
+    conclusion: task.summary,
+    priority: Number(task.priority) || 1,
+    date: task.created || "",
+    user_name: task.creator || "",
+    expire_date: task.deadline || ""
+  };
+}
+
+async function sendTaskToBackend(task, method) { // Speichert eine Aufgabe per POST oder PUT in der Datenbank.
+  const isUpdate = method === "PUT"; // PUT braucht die ID in der URL.
+  const url = isUpdate ? `${API_URL}/update_task/${task.id}` : `${API_URL}/post_tasks/`; // Passender Backend-Endpunkt.
+  const response = await fetch(url, {
+    method,
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(mapUiTaskToApiTask(task))
+  });
+
+  const result = await response.json(); // Liest die Backend-Antwort.
+
+  if (!response.ok || result.error) { // FastAPI kann technische Fehler oder JSON-Fehler liefern.
+    throw new Error(result.error || `API-Fehler: ${response.status}`);
+  }
+
+  return result.new_task || task; // POST liefert die neu erstellte Aufgabe inklusive Datenbank-ID.
+}
+
+async function deleteTaskInBackend(taskId) { // Löscht eine Aufgabe dauerhaft in der Datenbank.
+  const response = await fetch(`${API_URL}/delete_task/${taskId}`, {
+    method: "DELETE"
+  });
+  const result = await response.json();
+
+  if (!response.ok || result.error) {
+    throw new Error(result.error || `API-Fehler: ${response.status}`);
+  }
 }
 
 function renderTasks() { // Baut die Aufgabenliste aus allTasks komplett neu auf.
@@ -143,7 +186,7 @@ function openEditModal() { // Öffnet das Formular zum Bearbeiten der aktuellen 
   document.getElementById("createModal").style.display = "flex"; // Öffnet das Formular.
 }
 
-function deleteCurrentTask() { // Löscht die aktuell ausgewählte Aufgabe aus der Oberfläche.
+async function deleteCurrentTask() { // Löscht die aktuell ausgewählte Aufgabe aus der Oberfläche und Datenbank.
   if (!selectedTaskCard || !currentTask) { // Prüft, ob eine Aufgabe ausgewählt ist.
     return; // Bricht ab, wenn keine Aufgabe vorhanden ist.
   }
@@ -154,17 +197,25 @@ function deleteCurrentTask() { // Löscht die aktuell ausgewählte Aufgabe aus d
     return; // Löscht nichts.
   }
 
-  allTasks = allTasks.filter((task) => task.id !== currentTask.id); // Entfernt die Aufgabe aus dem lokalen Array.
-  addNotification("Geloescht", currentTask); // Erstellt eine Benachrichtigung.
-  selectedTaskCard = null; // Löscht die aktuelle Karten-Auswahl.
-  currentTask = null; // Löscht die aktuelle Aufgaben-Auswahl.
-  closeDetailModal(); // Schließt die Detailansicht.
-  renderTasks(); // Aktualisiert die Aufgabenliste.
-  renderCalendar(); // Aktualisiert den Kalender.
+  try {
+    await deleteTaskInBackend(currentTask.id); // Löscht die Aufgabe über den DELETE-Endpunkt.
+    allTasks = allTasks.filter((task) => task.id !== currentTask.id); // Entfernt die Aufgabe aus dem lokalen Array.
+    addNotification("Geloescht", currentTask); // Erstellt eine Benachrichtigung.
+    selectedTaskCard = null; // Löscht die aktuelle Karten-Auswahl.
+    currentTask = null; // Löscht die aktuelle Aufgaben-Auswahl.
+    closeDetailModal(); // Schließt die Detailansicht.
+    renderTasks(); // Aktualisiert die Aufgabenliste.
+    renderCalendar(); // Aktualisiert den Kalender.
+  } catch (error) {
+    console.error(error);
+    alert("Die Aufgabe konnte nicht in der Datenbank geloescht werden.");
+  }
 }
 
-document.getElementById("taskForm").addEventListener("submit", function(event) { // Reagiert auf das Absenden des Formulars.
+document.getElementById("taskForm").addEventListener("submit", async function(event) { // Reagiert auf das Absenden des Formulars.
   event.preventDefault(); // Verhindert das Neuladen der Seite.
+  const submitButton = event.target.querySelector(".save-btn"); // Speicherbutton für Ladezustand.
+  const isEditing = Boolean(editingTaskCard); // Merkt den Modus für API-Aufruf und Buttontext.
 
   const task = { // Sammelt alle Formularwerte in einem Aufgabenobjekt.
     id: currentTask?.id || createLocalId(), // Behält vorhandene ID oder erstellt eine neue lokale ID.
@@ -183,26 +234,41 @@ document.getElementById("taskForm").addEventListener("submit", function(event) {
     return; // Speichert die Aufgabe nicht.
   }
 
-  if (editingTaskCard) { // Bearbeiten-Modus: vorhandene Aufgabe aktualisieren.
-    const taskIndex = allTasks.findIndex((item) => item.id === task.id); // Sucht die Aufgabe im Array.
-    if (taskIndex !== -1) { // Prüft, ob die Aufgabe gefunden wurde.
-      addTaskHistory(task, "Ticket bearbeitet"); // Fügt einen Historieneintrag hinzu.
-      allTasks[taskIndex] = task; // Ersetzt die alte Aufgabe.
-    }
-    addNotification("Bearbeitet", task); // Erstellt eine Bearbeiten-Benachrichtigung.
-  } else { // Erstellen-Modus: neue Aufgabe hinzufügen.
-    addTaskHistory(task, "Ticket hinzugefuegt"); // Fügt einen Historieneintrag hinzu.
-    allTasks.push(task); // Speichert die neue Aufgabe lokal.
-    addNotification("Hinzugefuegt", task); // Erstellt eine Hinzufügen-Benachrichtigung.
-  }
+  submitButton.disabled = true; // Verhindert doppelte Speicheranfragen.
+  submitButton.innerText = "Speichere...";
 
-  closeCreateModal(); // Schließt das Formular.
-  event.target.reset(); // Leert das Formular.
-  editingTaskCard = null; // Beendet den Bearbeiten-Modus.
-  currentTask = null; // Entfernt die aktuelle Aufgaben-Auswahl.
-  renderTasks(); // Aktualisiert die Aufgabenliste.
-  renderCalendar(); // Aktualisiert den Kalender.
-  addDueSoonNotifications(); // Prüft auf neue Fälligkeitswarnungen.
+  try {
+    if (isEditing) { // Bearbeiten-Modus: vorhandene Aufgabe aktualisieren.
+      await sendTaskToBackend(task, "PUT"); // Speichert Änderungen dauerhaft in der Datenbank.
+      const taskIndex = allTasks.findIndex((item) => item.id === task.id); // Sucht die Aufgabe im Array.
+      if (taskIndex !== -1) { // Prüft, ob die Aufgabe gefunden wurde.
+        addTaskHistory(task, "Ticket bearbeitet"); // Fügt einen Historieneintrag hinzu.
+        allTasks[taskIndex] = task; // Ersetzt die alte Aufgabe.
+      }
+      addNotification("Bearbeitet", task); // Erstellt eine Bearbeiten-Benachrichtigung.
+    } else { // Erstellen-Modus: neue Aufgabe hinzufügen.
+      const createdTask = await sendTaskToBackend(task, "POST"); // Erstellt die Aufgabe dauerhaft in der Datenbank.
+      const mappedTask = mapApiTask(createdTask, getNextTicketNumber()); // Nutzt die Datenbank-ID aus der API-Antwort.
+      mappedTask.history = task.history; // Übernimmt die lokale Historie für die aktuelle Anzeige.
+      addTaskHistory(mappedTask, "Ticket hinzugefuegt"); // Fügt einen Historieneintrag hinzu.
+      allTasks.push(mappedTask); // Speichert die neue Aufgabe lokal.
+      addNotification("Hinzugefuegt", mappedTask); // Erstellt eine Hinzufügen-Benachrichtigung.
+    }
+
+    closeCreateModal(); // Schließt das Formular.
+    event.target.reset(); // Leert das Formular.
+    editingTaskCard = null; // Beendet den Bearbeiten-Modus.
+    currentTask = null; // Entfernt die aktuelle Aufgaben-Auswahl.
+    renderTasks(); // Aktualisiert die Aufgabenliste.
+    renderCalendar(); // Aktualisiert den Kalender.
+    addDueSoonNotifications(); // Prüft auf neue Fälligkeitswarnungen.
+  } catch (error) {
+    console.error(error);
+    alert("Die Aufgabe konnte nicht in der Datenbank gespeichert werden.");
+  } finally {
+    submitButton.disabled = false;
+    submitButton.innerText = isEditing ? "Aenderungen speichern" : "Aufgabe speichern";
+  }
 });
 
 function createTaskCard(task) { // Erstellt eine neue Aufgabenkarte.

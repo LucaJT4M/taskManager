@@ -556,6 +556,12 @@
       transform: translateY(-1px);
     }
 
+    .save-btn:disabled {
+      cursor: wait;
+      opacity: 0.72;
+      transform: none;
+    }
+
     .detail-grid {
       display: grid; /* Detailfelder werden als Raster angezeigt. */
       grid-template-columns: repeat(2, minmax(0, 1fr)); /* Zwei Spalten auf größeren Bildschirmen. */
