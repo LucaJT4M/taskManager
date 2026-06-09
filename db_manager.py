@@ -24,7 +24,7 @@ def ensure_table_exists():
             date DATE,
             user_name TEXT,
             expire_date DATE,
-            checked BOOLEAN,
+            checked BOOLEAN
         )
     ''')    # Tabelle wird erstellt, wenn es sie noch nicht gibt, mit den hier definierten Spalten
     conn.commit()
