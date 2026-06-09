@@ -1,4 +1,4 @@
-﻿const API_URL = "http://127.0.0.1:8000"; // Adresse des lokalen Backends.
+﻿const API_URL = "http://192.168.88.69:8000"; // Adresse des lokalen Backends.
 const priorityColors = { // Verknüpft Prioritäten mit CSS-Klassen für Kalenderfarben.
   1: "priority-color-1", // Farbe für Priorität 1.
   2: "priority-color-2", // Farbe für Priorität 2.
