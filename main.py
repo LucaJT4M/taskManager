@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from db_manager import *
+from fastapi.middleware.cors import CORSMiddleware
 
 # Beispielnutzung der Funktionen
 
@@ -13,7 +14,24 @@ from db_manager import *
 
 # delete_Task(1) #löscht die beispile ID1 
  
+ensure_table_exists() # überprüft ob die Tabelle in der Datenbank existiert.
+
 app = FastAPI() # erstellt die FastAPI APP 
+
+origins = [
+    "http://localhost:5500"   # erlaubt dem Kenny im Frotend auf die ApI im Backend zuzugreifen.
+]
+
+app.add_middleware(                     
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+
 
 @app.get("/get_tasks") # definiert den Endpunkt /get_tasks, den der Kenny im Frontend benutzt um die Tasks aus der Datenbank zu holen
 async def get_tasks():  # definiert die Funktion get_Tasks
@@ -42,7 +60,7 @@ async def get_tasks_for_esp():
     # 2. Augewählte Daten in ein json umwandeln
     taks_for_esp = []
     for task in tasks: # geht alle Tasks durch und wählt nur die Daten aus die das ESP braucht.
-        task_data = {   # definiert die Daten die das ESP braucht, ID, Title und checked.
+        task_data = {   # definiert die Daten die das ESP braucht, ID, Title und checked
             "id": task.id,
             "title": task.title,
             "checked": task.checked,
