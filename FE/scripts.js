@@ -19,25 +19,40 @@ async function loadTasksFromBackend() { // Lädt Aufgaben beim Start aus dem Bac
   const taskList = document.getElementById("taskList"); // Container, in dem die Aufgaben angezeigt werden.
 
   try { // Versucht, die Daten vom Backend zu holen.
-    const response = await fetch(`${API_URL}/get_tasks`); // Sendet eine GET-Anfrage an die Backend-Route.
+    const response = await fetch(`${API_URL}/get_tasks`, {
+      cache: "no-store"
+    }); // Sendet eine GET-Anfrage an die Backend-Route.
 
     if (!response.ok) { // Prüft, ob die Antwort erfolgreich war.
-      throw new Error(`API-Fehler: ${response.status}`); // Gibt den Fehlerstatus weiter.
+      const errorText = await response.text(); // Liest eine mögliche Fehlermeldung vom Backend.
+      throw new Error(`API erreichbar, aber Fehler ${response.status}: ${errorText || response.statusText}`); // Gibt den Fehlerstatus weiter.
     }
 
     const tasks = await response.json(); // Wandelt die JSON-Antwort in JavaScript-Daten um.
+
+    if (!Array.isArray(tasks)) { // Das Backend muss eine Liste von Aufgaben liefern.
+      throw new Error("API-Antwort ist keine Aufgabenliste.");
+    }
+
     allTasks = tasks.map((apiTask, index) => mapApiTask(apiTask, index + 1)); // Formatiert jede Backend-Aufgabe für die UI.
-    renderTasks(); // Zeichnet die Aufgabenliste neu.
-    addDueSoonNotifications(); // Erstellt Hinweise für bald fällige Aufgaben.
-    renderCalendar(); // Zeichnet den Kalender mit den geladenen Aufgaben.
   } catch (error) { // Wird ausgeführt, wenn Backend oder Netzwerk nicht erreichbar sind.
     console.error(error); // Schreibt den technischen Fehler in die Browser-Konsole.
     taskList.innerHTML = `
       <p class="task-summary">
-        Aufgaben konnten nicht aus main.py geladen werden. Starte das Backend mit:
-        uvicorn main:app --reload
+        Aufgaben konnten nicht aus main.py geladen werden.
+        ${escapeHtml(error.message || "Unbekannter Fehler.")}
       </p>
     `; // Zeigt dem Benutzer eine hilfreiche Fehlermeldung an.
+    return;
+  }
+
+  renderTasks(); // Zeichnet die Aufgabenliste neu.
+
+  try {
+    addDueSoonNotifications(); // Erstellt Hinweise für bald fällige Aufgaben.
+    renderCalendar(); // Zeichnet den Kalender mit den geladenen Aufgaben.
+  } catch (error) {
+    console.error("Aufgaben wurden geladen, aber Zusatzfunktionen konnten nicht gerendert werden:", error);
   }
 }
 
