@@ -36,6 +36,20 @@ async def post_tasks(task: Task): # erstellung der Funktion um Tasks zu erstelle
     else: 
         return {"error": "Failed to create task"} # wenn Task nicht erstellt werden konnte geht er die If schleife durch und gibt eine Fehlermeldung zurück
 
+@app.get("/get_tasks_for_esp") # definiert den Endpunkt um die Tasks für das ESP zu holen.
+async def get_tasks_for_esp(): 
+    tasks = read_Tasks() # holt alle Tasks aus der Datenbank
+    # 2. Augewählte Daten in ein json umwandeln
+    taks_for_esp = []
+    for task in tasks: # geht alle Tasks durch und wählt nur die Daten aus die das ESP braucht.
+        task_data = {   # definiert die Daten die das ESP braucht, ID, Title und checked.
+            "id": task.id,
+            "title": task.title,
+            "checked": task.checked,
+        }
+        taks_for_esp.append(task_data) # fügt die ausgewählten Daten in die Liste taks_for_esp ein
+        return taks_for_esp # gibt die Liste mit den Daten für das ESP aus
+
 # UPDATE LUCA: Hier gabs nen fehler beim Post, da es besser ist einen body hinzuzufügen (mit async def post_tasks(task: Task) und das entfernen von @app.post("/post_tasks/{task}"))
 
 @app.put("/update_task/{id}") # definiert den Endpunkt um Tasks zu updaten
