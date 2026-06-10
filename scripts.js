@@ -71,7 +71,8 @@ function mapApiTask(apiTask, ticketNumber) { // Wandelt eine Backend-Aufgabe in 
         action: "Aus Backend geladen", // Text des Historieneintrags.
         time: new Date().toLocaleString("de-DE") // Zeitpunkt im deutschen Datumsformat.
       }
-    ]
+    ],
+    checked: apiTask.checked ?? apiTask.Checked ?? false // Erledigt-Status, standardmäßig false.
   };
 }
 
@@ -83,8 +84,8 @@ function mapUiTaskToApiTask(task) { // Wandelt eine UI-Aufgabe in das Format des
     priority: Number(task.priority) || 1,
     date: task.created || "",
     user_name: task.creator || "",
-    expire_date: task.deadline || ""
-  };
+    expire_date: task.deadline || "",
+    checked: task.checked || null  };
 }
 
 async function sendTaskToBackend(task, method) { // Speichert eine Aufgabe per POST oder PUT in der Datenbank.
@@ -128,18 +129,24 @@ function renderTasks() { // Baut die Aufgabenliste aus allTasks komplett neu auf
 }
 
 function openDetailModal(card, task) { // Öffnet die Detailansicht für eine Aufgabe.
-  selectedTaskCard = card; // Merkt sich die geklickte Karte.
-  currentTask = task; // Merkt sich die angezeigte Aufgabe.
+  selectedTaskCard = card;
+  currentTask = task;
 
-  document.getElementById("detailTitle").innerText = task.title; // Setzt den Titel im Detaildialog.
-  document.getElementById("detailSummary").innerText = task.summary; // Setzt die Zusammenfassung im Detaildialog.
-  document.getElementById("detailPriority").innerText = task.priority || "Offen"; // Setzt die Priorität oder einen Ersatztext.
-  document.getElementById("detailCreated").innerText = formatDisplayDate(task.created); // Zeigt das Erstelldatum lesbar an.
-  document.getElementById("detailCreator").innerText = task.creator || "Unbekannt"; // Zeigt den Ersteller oder einen Ersatztext an.
-  document.getElementById("detailDeadline").innerText = formatDisplayDate(task.deadline) || "Offen"; // Zeigt das Ablaufdatum lesbar an.
-  renderTaskHistory(task); // Fügt die Historie der Aufgabe ein.
+  document.getElementById("detailTitle").innerText = task.title;
+  document.getElementById("detailSummary").innerText = task.summary;
+  document.getElementById("detailPriority").innerText = task.priority || "Offen";
+  document.getElementById("detailCreated").innerText = formatDisplayDate(task.created);
+  document.getElementById("detailCreator").innerText = task.creator || "Unbekannt";
+  document.getElementById("detailDeadline").innerText = formatDisplayDate(task.deadline) || "Offen";
 
-  document.getElementById("detailModal").style.display = "flex"; // Macht den Detaildialog sichtbar.
+  // --- Neu: checked-Status in der Detailansicht setzen ---
+  const detailEditedEl = document.getElementById("detailEdited");
+  if (detailEditedEl) {
+    detailEditedEl.innerText = task.checked ? "Ja" : "Nein";
+  }
+
+  renderTaskHistory(task);
+  document.getElementById("detailModal").style.display = "flex";
 }
 
 function closeDetailModal() { // Schließt die Detailansicht.
@@ -182,55 +189,56 @@ function closeCreateModal() { // Schließt den Formulardialog.
 }
 
 function openEditModal() { // Öffnet das Formular zum Bearbeiten der aktuellen Aufgabe.
-  if (!currentTask || !selectedTaskCard) { // Ohne ausgewählte Aufgabe kann nichts bearbeitet werden.
-    return; // Bricht ab.
+  if (!currentTask || !selectedTaskCard) return;
+
+  editingTaskCard = selectedTaskCard;
+  document.getElementById("formTitle").innerText = "Aufgabe bearbeiten";
+  document.querySelector(".save-btn").innerText = "Änderungen speichern";
+  document.getElementById("taskTitle").value = currentTask.title || "";
+  document.getElementById("taskSummary").value = currentTask.summary || "";
+  document.getElementById("taskPriority").value = currentTask.priority || "1";
+  document.getElementById("taskCreated").value = currentTask.created || "";
+  document.getElementById("taskCreator").value = currentTask.creator || "";
+  document.getElementById("taskDeadline").value = currentTask.deadline || "";
+  updateDeadlineMinimum();
+
+  // Setze die Radios für "Erledigt" anhand des Task-Werts
+  setFormCheckedRadios(!!currentTask.checked);
+
+  closeDetailModal();
+  document.getElementById("createModal").style.display = "flex";
+}
+
+function closeEditModal() { // Schließt das Bearbeitungsformular.
+  document.getElementById("createModal").style.display = "none"; // Versteckt das Formular.
+}
+
+// Helper: aktuellen Wert des "Erledigt" Feldes aus dem Formular lesen
+function getFormCheckedValue() {
+  const checked = document.querySelector('input[name="taskChecked"]:checked');
+  return checked ? (checked.value === 'true') : false;
+}
+
+// Helper: Radios im Formular für "Erledigt" setzen
+function setFormCheckedRadios(value) {
+  const yes = document.getElementById('taskEditedYes');
+  const no = document.getElementById('taskEditedNo');
+  if (yes && no) {
+    yes.checked = !!value;
+    no.checked = !value;
   }
+}
 
-  editingTaskCard = selectedTaskCard; // Markiert, dass beim Speichern eine vorhandene Aufgabe ersetzt wird.
-  document.getElementById("formTitle").innerText = "Aufgabe bearbeiten"; // Setzt die Formularüberschrift.
-  document.querySelector(".save-btn").innerText = "Aenderungen speichern"; // Setzt den Buttontext für Bearbeitung.
-  document.getElementById("taskTitle").value = currentTask.title; // Füllt den Titel ins Formular.
-  document.getElementById("taskSummary").value = currentTask.summary; // Füllt die Zusammenfassung ins Formular.
-  document.getElementById("taskPriority").value = currentTask.priority; // Füllt die Priorität ins Formular.
-  document.getElementById("taskCreated").value = currentTask.created; // Füllt das Erstelldatum ins Formular.
-  document.getElementById("taskCreator").value = currentTask.creator; // Füllt den Ersteller ins Formular.
-  document.getElementById("taskDeadline").value = currentTask.deadline; // Füllt das Ablaufdatum ins Formular.
-  updateDeadlineMinimum(); // Setzt das erlaubte Mindestdatum für das Ablaufdatum.
+// Wenn ein Task ins Bearbeitungsformular geladen wird: Felder + Radios setzen
+function populateFormForEdit(task) {
+  if (document.getElementById('taskTitle')) document.getElementById('taskTitle').value = task.title || '';
+  if (document.getElementById('taskSummary')) document.getElementById('taskSummary').value = task.summary || '';
+  if (document.getElementById('taskPriority')) document.getElementById('taskPriority').value = task.priority || '1';
+  if (document.getElementById('taskCreated')) document.getElementById('taskCreated').value = task.created || '';
+  if (document.getElementById('taskCreator')) document.getElementById('taskCreator').value = task.creator || '';
+  if (document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = task.deadline || '';
 
-  // Helper: aktuellen Wert des "Bearbeitet" Feldes aus dem Formular lesen
-  function getFormEditedValue() {
-    const checked = document.querySelector('input[name="taskEdited"]:checked');
-    return checked ? (checked.value === 'yes') : false;
-  }
-
-  // Helper: Radios im Formular für Edit setzen
-  function setFormEditedRadios(value) {
-    const yes = document.getElementById('taskEditedYes');
-    const no = document.getElementById('taskEditedNo');
-    if (yes && no) {
-      yes.checked = !!value;
-      no.checked = !value;
-    }
-  }
-
-  // Wenn ein Task ins Bearbeitungsformular geladen wird: Radios setzen
-  function populateFormForEdit(task) {
-    // Beispielhafte Zuweisungen (falls andere Felder bereits gesetzt werden, bleibt das kompatibel)
-    if (document.getElementById('taskTitle')) document.getElementById('taskTitle').value = task.title || '';
-    if (document.getElementById('taskSummary')) document.getElementById('taskSummary').value = task.summary || '';
-    if (document.getElementById('taskPriority')) document.getElementById('taskPriority').value = task.priority || '1';
-    if (document.getElementById('taskCreated')) document.getElementById('taskCreated').value = task.created || '';
-    if (document.getElementById('taskCreator')) document.getElementById('taskCreator').value = task.creator || '';
-    if (document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = task.deadline || '';
-
-    // Setze die Radios für "Bearbeitet"
-    setFormEditedRadios(task.edited);
-  }
-
-  populateFormForEdit(currentTask); // Füllt das Formular mit den Werten der aktuellen Aufgabe.
-
-  closeDetailModal(); // Schließt die Detailansicht.
-  document.getElementById("createModal").style.display = "flex"; // Öffnet das Formular.
+  setFormCheckedRadios(!!task.checked);
 }
 
 async function deleteCurrentTask() { // Löscht die aktuell ausgewählte Aufgabe aus der Oberfläche und Datenbank.
@@ -273,7 +281,8 @@ document.getElementById("taskForm").addEventListener("submit", async function(ev
     created: document.getElementById("taskCreated").value, // Liest das Erstelldatum.
     creator: document.getElementById("taskCreator").value.trim(), // Liest den Ersteller ohne Leerzeichen am Rand.
     deadline: document.getElementById("taskDeadline").value, // Liest das Ablaufdatum.
-    history: currentTask?.history ? [...currentTask.history] : [] // Übernimmt vorhandene Historie oder startet leer.
+    history: currentTask?.history ? [...currentTask.history] : [], // Übernimmt vorhandene Historie oder startet leer.
+    checked: getFormCheckedValue() // <-- hier wird der Radio-Wert gelesen (true/false)
   };
 
   if (!isDateRangeValid(task.created, task.deadline)) { // Prüft, ob das Ablaufdatum nach dem Erstelldatum liegt.
@@ -326,11 +335,12 @@ function createTaskCard(task) { // Erstellt eine neue Aufgabenkarte.
 }
 
 function updateTaskCard(card, task) { // Befüllt eine Aufgabenkarte mit Daten.
-  card.dataset.taskId = String(task.id); // Speichert die ID im HTML, damit die Karte später gefunden werden kann.
-  card.onclick = function() { // Reagiert auf einen Klick auf die Karte.
-    openDetailModal(card, task); // Öffnet die Detailansicht dieser Aufgabe.
+  card.dataset.taskId = String(task.id);
+  card.onclick = function() {
+    openDetailModal(card, task);
   };
 
+  // Karte erweitert um einen Status-Pill (Erledigt / Offen)
   card.innerHTML = `
     <div>
       <div class="task-title"></div>
@@ -339,6 +349,7 @@ function updateTaskCard(card, task) { // Befüllt eine Aufgabenkarte mit Daten.
       <div class="task-meta">
         <span class="priority"></span>
         <span class="meta-pill"></span>
+        <span class="status-pill" style="margin-left:8px; font-weight:700;"></span>
       </div>
     </div>
 
@@ -346,13 +357,22 @@ function updateTaskCard(card, task) { // Befüllt eine Aufgabenkarte mit Daten.
       <span>Ablaufdatum</span>
       <span class="deadline-value"></span>
     </div>
-  `; // Erstellt die HTML-Struktur der Karte.
+  `;
 
-  card.querySelector(".task-title").innerText = `#${task.ticketNumber} ${task.title}`; // Setzt Ticketnummer und Titel.
-  card.querySelector(".task-summary").innerText = task.summary; // Setzt die Zusammenfassung.
-  card.querySelector(".priority").innerText = `Prioritaet: ${task.priority || "Offen"}`; // Setzt die Priorität.
-  card.querySelector(".meta-pill").innerText = task.creator || "Unbekannt"; // Setzt den Ersteller.
-  card.querySelector(".deadline-value").innerText = formatDisplayDate(task.deadline) || "Offen"; // Setzt das Ablaufdatum.
+  card.querySelector(".task-title").innerText = `#${task.ticketNumber} ${task.title}`;
+  card.querySelector(".task-summary").innerText = task.summary || "";
+  card.querySelector(".priority").innerText = `Priorität: ${task.priority || "Offen"}`;
+  card.querySelector(".meta-pill").innerText = task.creator || "Unbekannt";
+  card.querySelector(".deadline-value").innerText = formatDisplayDate(task.deadline) || "Offen";
+
+  // --- Neu: Status-Pill setzen ---
+  const statusEl = card.querySelector(".status-pill");
+  if (statusEl) {
+    statusEl.innerText = task.checked ? "Erledigt" : "Offen";
+    statusEl.style.color = task.checked ? "var(--success)" : "var(--muted)";
+  }
+
+  // Falls Kalender-Marker o.ä. abhängig von checked sind: hier ergänzen (optional)
 }
 
 function toggleCalendar() { // Klappt den Kalender ein oder aus.
@@ -760,11 +780,11 @@ function populateFormForEdit(task) {
   if (document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = task.deadline || '';
 
   // Setze die Radios für "Bearbeitet"
-  setFormEditedRadios(task.edited);
+  setFormEditedRadios(task.checked);
 }
 
-// Beim Absenden des Formulars: 'edited' mit in die Task-Daten aufnehmen
-// Falls bereits ein submit-Handler existiert, ergänze dort die Zeile `edited: getFormEditedValue()`
+// Beim Absenden des Formulars: 'checked' mit in die Task-Daten aufnehmen
+// Falls bereits ein submit-Handler existiert, ergänze dort die Zeile `checked: getFormEditedValue()`
 // Hier ein vollständiger Handler-Fallback / Ergänzung:
 const taskForm = document.getElementById('taskForm');
 if (taskForm) {
@@ -780,7 +800,7 @@ if (taskForm) {
       created: document.getElementById('taskCreated')?.value || null,
       creator: document.getElementById('taskCreator')?.value || null,
       deadline: document.getElementById('taskDeadline')?.value || null,
-      edited: getFormEditedValue() // <-- neues Feld
+      checked: getFormEditedValue() // <-- neues Feld
     };
 
     // ...existing code to send taskData to backend or update UI ...
@@ -808,7 +828,7 @@ function showTaskDetails(task) {
   if (document.getElementById('detailCreator')) document.getElementById('detailCreator').textContent = task.creator || '';
   if (document.getElementById('detailDeadline')) document.getElementById('detailDeadline').textContent = task.deadline || '';
 
-  const editedText = task.edited ? 'Ja' : 'Nein';
+  const editedText = task.checked ? 'Ja' : 'Nein';
   const detailEditedEl = document.getElementById('detailEdited');
   if (detailEditedEl) detailEditedEl.textContent = editedText;
 
