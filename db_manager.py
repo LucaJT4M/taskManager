@@ -48,7 +48,7 @@ def read_Tasks() -> list[Task]: #gibt eine Liste von Tasks zurpück
 def create_Task(to_add_Task: Task):#erstellt Tasks in der Datenbank
     conn = sqlite3.connect("tasks.db")
     kirkler = conn.cursor()
-    kirkler.execute("INSERT INTO tasks (title,conclusion,priority,date,user_name,expire_date,checked) VALUES (?,?,?,?,?,?)", (to_add_Task.title, to_add_Task.conclusion, to_add_Task.priority, to_add_Task.date, to_add_Task.user_name, to_add_Task.expire_date, to_add_Task.checked)) #added die Werte aus to_add_Task in die Datenbank ein
+    kirkler.execute("INSERT INTO tasks (title,conclusion,priority,date,user_name,expire_date,checked) VALUES (?,?,?,?,?,?,?)", (to_add_Task.title, to_add_Task.conclusion, to_add_Task.priority, to_add_Task.date, to_add_Task.user_name, to_add_Task.expire_date, to_add_Task.checked)) #added die Werte aus to_add_Task in die Datenbank ein
     Task_ID = kirkler.lastrowid #holt die ID der soeben erstellten Task
     conn.commit()
     conn.close()

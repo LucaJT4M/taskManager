@@ -763,6 +763,12 @@
           <span id="detailDeadline"></span> <!-- JavaScript setzt hier das Ablaufdatum ein. -->
         </div>
 
+        <!-- Neues Detailfeld: Bearbeitet -->
+        <div class="detail-row">
+          <strong>Bearbeitet</strong>
+          <span id="detailEdited">Nein</span> <!-- JavaScript setzt hier Ja / Nein. -->
+        </div>
+
         <div class="detail-row full">
           <strong>Änderungshistorie</strong>
           <div class="history-list" id="detailHistory"></div> <!-- JavaScript fügt hier die Änderungshistorie ein. -->
@@ -821,13 +827,26 @@
           <input id="taskDeadline" type="date" /> <!-- Spätestes Datum der Aufgabe. -->
         </div>
 
+        <!-- Neues Feld: Bearbeitet (Nein / Ja) -->
+        <div class="form-group">
+          <label>Bearbeitet</label>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <label for="taskEditedNo" style="font-weight:700;">
+              <input id="taskEditedNo" name="taskEdited" type="radio" value="no" checked /> Nein
+            </label>
+            <label for="taskEditedYes" style="font-weight:700;">
+              <input id="taskEditedYes" name="taskEdited" type="radio" value="yes" /> Ja
+            </label>
+          </div>
+        </div>
+
         <button type="submit" class="save-btn"> <!-- Speichert neue Aufgaben oder Änderungen. -->
           Aufgabe speichern
         </button>
       </form>
     </div>
   </div>
-
+  
   <div class="modal" id="calendarTaskModal"> <!-- Dialog für Aufgaben, die über den Kalender ausgewählt wurden. -->
     <div class="modal-content"> <!-- Sichtbarer Inhalt des Kalenderdialogs. -->
       <span class="close" onclick="closeCalendarTaskModal()"> <!-- Schließt den Kalenderdialog. -->

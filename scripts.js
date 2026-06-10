@@ -197,6 +197,38 @@ function openEditModal() { // Öffnet das Formular zum Bearbeiten der aktuellen 
   document.getElementById("taskDeadline").value = currentTask.deadline; // Füllt das Ablaufdatum ins Formular.
   updateDeadlineMinimum(); // Setzt das erlaubte Mindestdatum für das Ablaufdatum.
 
+  // Helper: aktuellen Wert des "Bearbeitet" Feldes aus dem Formular lesen
+  function getFormEditedValue() {
+    const checked = document.querySelector('input[name="taskEdited"]:checked');
+    return checked ? (checked.value === 'yes') : false;
+  }
+
+  // Helper: Radios im Formular für Edit setzen
+  function setFormEditedRadios(value) {
+    const yes = document.getElementById('taskEditedYes');
+    const no = document.getElementById('taskEditedNo');
+    if (yes && no) {
+      yes.checked = !!value;
+      no.checked = !value;
+    }
+  }
+
+  // Wenn ein Task ins Bearbeitungsformular geladen wird: Radios setzen
+  function populateFormForEdit(task) {
+    // Beispielhafte Zuweisungen (falls andere Felder bereits gesetzt werden, bleibt das kompatibel)
+    if (document.getElementById('taskTitle')) document.getElementById('taskTitle').value = task.title || '';
+    if (document.getElementById('taskSummary')) document.getElementById('taskSummary').value = task.summary || '';
+    if (document.getElementById('taskPriority')) document.getElementById('taskPriority').value = task.priority || '1';
+    if (document.getElementById('taskCreated')) document.getElementById('taskCreated').value = task.created || '';
+    if (document.getElementById('taskCreator')) document.getElementById('taskCreator').value = task.creator || '';
+    if (document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = task.deadline || '';
+
+    // Setze die Radios für "Bearbeitet"
+    setFormEditedRadios(task.edited);
+  }
+
+  populateFormForEdit(currentTask); // Füllt das Formular mit den Werten der aktuellen Aufgabe.
+
   closeDetailModal(); // Schließt die Detailansicht.
   document.getElementById("createModal").style.display = "flex"; // Öffnet das Formular.
 }
@@ -700,3 +732,85 @@ window.onclick = function(event) { // Reagiert auf Klicks im Fenster.
 document.getElementById("taskCreated").addEventListener("change", updateDeadlineMinimum); // Aktualisiert Datumslimit, wenn das Erstelldatum geändert wird.
 document.getElementById("taskDeadline").addEventListener("change", updateDeadlineMinimum); // Aktualisiert Validierung, wenn das Ablaufdatum geändert wird.
 document.addEventListener("DOMContentLoaded", loadTasksFromBackend); // Lädt Aufgaben, sobald das HTML vollständig geladen ist.
+
+// Helper: aktuellen Wert des "Bearbeitet" Feldes aus dem Formular lesen
+function getFormEditedValue() {
+  const checked = document.querySelector('input[name="taskEdited"]:checked');
+  return checked ? (checked.value === 'yes') : false;
+}
+
+// Helper: Radios im Formular für Edit setzen
+function setFormEditedRadios(value) {
+  const yes = document.getElementById('taskEditedYes');
+  const no = document.getElementById('taskEditedNo');
+  if (yes && no) {
+    yes.checked = !!value;
+    no.checked = !value;
+  }
+}
+
+// Wenn ein Task ins Bearbeitungsformular geladen wird: Radios setzen
+function populateFormForEdit(task) {
+  // Beispielhafte Zuweisungen (falls andere Felder bereits gesetzt werden, bleibt das kompatibel)
+  if (document.getElementById('taskTitle')) document.getElementById('taskTitle').value = task.title || '';
+  if (document.getElementById('taskSummary')) document.getElementById('taskSummary').value = task.summary || '';
+  if (document.getElementById('taskPriority')) document.getElementById('taskPriority').value = task.priority || '1';
+  if (document.getElementById('taskCreated')) document.getElementById('taskCreated').value = task.created || '';
+  if (document.getElementById('taskCreator')) document.getElementById('taskCreator').value = task.creator || '';
+  if (document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = task.deadline || '';
+
+  // Setze die Radios für "Bearbeitet"
+  setFormEditedRadios(task.edited);
+}
+
+// Beim Absenden des Formulars: 'edited' mit in die Task-Daten aufnehmen
+// Falls bereits ein submit-Handler existiert, ergänze dort die Zeile `edited: getFormEditedValue()`
+// Hier ein vollständiger Handler-Fallback / Ergänzung:
+const taskForm = document.getElementById('taskForm');
+if (taskForm) {
+  taskForm.addEventListener('submit', async (e) => {
+    // Wenn ein anderer Handler bereits e.preventDefault macht, wird das nicht doppelt störend sein.
+    e.preventDefault();
+
+    // ...existing code to collect other fields...
+    const taskData = {
+      title: document.getElementById('taskTitle')?.value || '',
+      summary: document.getElementById('taskSummary')?.value || '',
+      priority: Number(document.getElementById('taskPriority')?.value || 1),
+      created: document.getElementById('taskCreated')?.value || null,
+      creator: document.getElementById('taskCreator')?.value || null,
+      deadline: document.getElementById('taskDeadline')?.value || null,
+      edited: getFormEditedValue() // <-- neues Feld
+    };
+
+    // ...existing code to send taskData to backend or update UI ...
+    // Beispiel: fetch(API_URL + '/save_task', { method:'POST', body: JSON.stringify(taskData), headers:{'Content-Type':'application/json'} })
+    // Danach Modal schließen und Liste neu laden / UI aktualisieren.
+    if (typeof submitTaskData === 'function') {
+      // wenn es eine helper-Funktion gibt, benutze sie
+      submitTaskData(taskData);
+    } else {
+      console.debug('taskForm submit (fallback) payload:', taskData);
+      // Fallback: schließe Modal und reload tasks, wenn vorhandene Funktionen existieren
+      if (typeof closeCreateModal === 'function') closeCreateModal();
+      if (typeof loadTasksFromBackend === 'function') loadTasksFromBackend();
+    }
+  });
+}
+
+// Beim Anzeigen der Task-Details: Bearbeitet anzeigen
+function showTaskDetails(task) {
+  // ...existing code that sets detailTitle, detailSummary, etc. ...
+  if (document.getElementById('detailTitle')) document.getElementById('detailTitle').textContent = task.title || '';
+  if (document.getElementById('detailSummary')) document.getElementById('detailSummary').textContent = task.summary || '';
+  if (document.getElementById('detailPriority')) document.getElementById('detailPriority').textContent = task.priority || '';
+  if (document.getElementById('detailCreated')) document.getElementById('detailCreated').textContent = task.created || '';
+  if (document.getElementById('detailCreator')) document.getElementById('detailCreator').textContent = task.creator || '';
+  if (document.getElementById('detailDeadline')) document.getElementById('detailDeadline').textContent = task.deadline || '';
+
+  const editedText = task.edited ? 'Ja' : 'Nein';
+  const detailEditedEl = document.getElementById('detailEdited');
+  if (detailEditedEl) detailEditedEl.textContent = editedText;
+
+  // ...existing code to fill history and actions ...
+}
