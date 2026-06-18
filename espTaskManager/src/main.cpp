@@ -52,7 +52,7 @@ void setup() {
   Serial.println("Connected");
   
   if (WiFi.status() == WL_CONNECTED) {
-    write_to_monitor("Connected");
+    write_to_monitor("Connected ready for data refresh");
     /* HTTPClient http;
     
     http.begin(API_URL);  // Start connection
