@@ -1,6 +1,7 @@
-from fastapi import FastAPI, FileResponse
+from fastapi import FastAPI
 from db_manager import *
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 # Beispielnutzung der Funktionen
 
