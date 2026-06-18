@@ -53,7 +53,7 @@ void setup() {
   
   if (WiFi.status() == WL_CONNECTED) {
     write_to_monitor("Connected");
-    HTTPClient http;
+    /* HTTPClient http;
     
     http.begin(API_URL);  // Start connection
     int httpCode = http.GET();
@@ -66,9 +66,9 @@ void setup() {
       Serial.println(payload);
     } else {
       Serial.printf("Request failed: %s\n", http.errorToString(httpCode).c_str());
-    }
+    } */
 
-    http.end();
+    /* http.end(); */
   }
 }
 
@@ -91,7 +91,7 @@ class Task {
     }
 };
 
-void parse_list_from_json(const String& json) {
+std::vector<Task> parse_list_from_json(const String& json) {
     std::vector<Task> tasks;
     JsonDocument doc;
 
@@ -99,7 +99,7 @@ void parse_list_from_json(const String& json) {
     if (error) {
         Serial.print("JSON parse failed: ");
         Serial.println(error.c_str());
-        return;
+        return tasks;
     }
 
     JsonArray array = doc.as<JsonArray>();
@@ -117,6 +117,7 @@ void parse_list_from_json(const String& json) {
     }
 
     Serial.printf("Loaded %d tasks\n", tasks.size());
+    return tasks;
 }
 
 class Button {
@@ -146,7 +147,7 @@ Button refresh_btn("api refresh");
 Button btn_two("button two");
 Button btn_three("button three");
 
-void get_tasks_from_api() {
+String get_tasks_from_api() {
   HTTPClient http;
 
   http.begin(API_URL);  // Start connection
@@ -158,31 +159,38 @@ void get_tasks_from_api() {
     String payload = http.getString();
     Serial.println("Response:");
     Serial.println(payload);
+    http.end();
     return payload;
   } else {
-    Serial.printf("Request failed: %s\n",
-                  http.errorToString(httpCode).c_str());
+    Serial.printf("Request failed: %s\n", http.errorToString(httpCode).c_str());
+    http.end();
+    return "";
   }
-
-  http.end();
 }
 
-void print_task_ui(Task task) {
+void print_task_ui(Task task, int this_index, int list_size) {
   display.clearDisplay();
   display.setCursor(0, 10);
-  display.println("Id: " + task.id);
-  display.setCursor(1, 10);
-  display.println("Titel: " + task.title);
-  display.setCursor(2, 10);
+  display.print("Id: ");
+  display.println(task.id);
+
+  display.setCursor(0, 20);
+  display.print("Titel: ");
+  display.println(task.title);
+
+  display.setCursor(0, 30);
   if (task.checked) {
     display.println("Erledigt: Ja");
   } else {
     display.println("Erledigt: Nein");
   }
+  display.setCursor(0, 50);
+  display.println(String(this_index + 1) + "/" + String(list_size));
   display.display();
 }
 
 std::vector<Task> tasks;
+int current_index = 0;
 
 void loop() {
   // Put your main code here to run repeatedly
@@ -191,11 +199,27 @@ void loop() {
   btn_three.state = digitalRead(button_three);
 
   bool got_refreshed = refresh_btn.Update();
+  bool task_up = btn_two.Update();
+  bool task_down = btn_three.Update();
 
   if (got_refreshed) {
-    get_tasks_from_api();
+    tasks = parse_list_from_json(get_tasks_from_api());
+    current_index = 0;
   }
-  
-  btn_two.Update();
-  btn_three.Update();
+
+  if (task_up) {
+    if (current_index + 1 < tasks.size()) {
+      current_index += 1;
+    }
+  }
+
+  if (task_down) {
+    if (current_index > 0) {
+      current_index -= 1;
+    }
+  }
+
+  if (!tasks.empty()) {
+    print_task_ui(tasks[current_index], current_index, tasks.size());
+  }
 }
