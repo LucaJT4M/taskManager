@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, FileResponse
 from db_manager import *
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -32,8 +32,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-
+@app.get("/") # definiert den Endpunkt /, der die Startseite der API darstellt
+async def root(): # definiert die Funktion root, die eine einfache Nachricht zurückgibt,
+    return FileResponse("index.html") # die die index.html Datei zurückgibt, die die Startseite der API darstellt
 
 @app.get("/get_tasks") # definiert den Endpunkt /get_tasks, den der Kenny im Frontend benutzt um die Tasks aus der Datenbank zu holen
 async def get_tasks():  # definiert die Funktion get_Tasks
