@@ -1,51 +1,51 @@
 # ESP32 Task Manager
 
-A simple ESP32 project that fetches tasks from a REST API and displays them on an SH1106 OLED display. The project uses three buttons to refresh the task list and navigate through tasks.
+Ein einfaches ESP32-Projekt, das Aufgaben von einer REST-API abruft und auf einem SH1106 OLED-Display anzeigt. Das Projekt verwendet drei Tasten, um die Aufgabenliste zu aktualisieren und durch Aufgaben zu navigieren.
 
-## Features
+## Funktionen
 
-- Connects ESP32 to Wi-Fi
-- Fetches task JSON from a configurable API endpoint
-- Displays task details on an SH1106 display
-- Uses three buttons for:
-  - Refresh API data
-  - Move to next task
-  - Move to previous task
+- Verbindet den ESP32 mit dem WLAN
+- Ruft Aufgaben im JSON-Format von einem konfigurierbaren API-Endpunkt ab
+- Zeigt Aufgabendetails auf einem SH1106-Display an
+- Verwendet drei Tasten für:
+  - Aktualisieren der API-Daten
+  - Wechsel zur nächsten Aufgabe
+  - Wechsel zur vorherigen Aufgabe
 
 ## Hardware
 
-- ESP32 board (configured for `upesy_wroom` in `platformio.ini`)
-- SH1106 OLED display (128x64)
-- Three momentary push buttons
-- I2C wiring for the display
+- ESP32-Board (in `platformio.ini` als `upesy_wroom` konfiguriert)
+- SH1106 OLED-Display (128x64)
+- Drei Drucktasten
+- I2C-Verkabelung für das Display
 
-## Wiring
+## Verkabelung
 
 - OLED I2C `SDA` -> ESP32 GPIO 21
 - OLED I2C `SCL` -> ESP32 GPIO 22
-- Display I2C address: `0x3C`
-- Button 1 (refresh) -> GPIO 17
-- Button 2 (next task) -> GPIO 15
-- Button 3 (previous task) -> GPIO 16
-- Buttons use `INPUT_PULLUP`, so wire one side to the GPIO and the other side to ground.
+- Display-I2C-Adresse: `0x3C`
+- Taste 1 (Aktualisieren) -> GPIO 17
+- Taste 2 (nächste Aufgabe) -> GPIO 15
+- Taste 3 (vorherige Aufgabe) -> GPIO 16
+- Die Tasten verwenden `INPUT_PULLUP`, daher wird eine Seite an den GPIO und die andere Seite an Masse angeschlossen.
 
-## Configuration
+## Konfiguration
 
-Update the following values in `src/main.cpp` before building:
+Aktualisiere vor dem Kompilieren die folgenden Werte in `src/main.cpp`:
 
-- `ssid` - Wi-Fi network name
-- `API_URL` - Your task API endpoint
+- `ssid` - WLAN-Netzwerkname
+- `API_URL` - Deine API-URL für Aufgaben
 
-Example:
+Beispiel:
 
 ```cpp
 const char* ssid = "MikroTik-AF2E92";
 String API_URL = "http://192.168.88.69:8000/get_tasks_for_esp";
 ```
 
-## Dependencies
+## Abhängigkeiten
 
-The project uses PlatformIO and the following libraries configured in `platformio.ini`:
+Das Projekt verwendet PlatformIO und folgende Bibliotheken, die in `platformio.ini` konfiguriert sind:
 
 - `Adafruit SH110X`
 - `Adafruit GFX Library`
@@ -54,44 +54,44 @@ The project uses PlatformIO and the following libraries configured in `platformi
 
 ## Build & Upload
 
-1. Install [PlatformIO](https://platformio.org/).
-2. Open the project in PlatformIO or VS Code with the PlatformIO extension.
-3. Verify the upload port in `platformio.ini`:
+1. Installiere [PlatformIO](https://platformio.org/).
+2. Öffne das Projekt in PlatformIO oder VS Code mit der PlatformIO-Erweiterung.
+3. Überprüfe den Upload-Port in `platformio.ini`:
 
 ```ini
 upload_port = /dev/ttyUSB0
 ```
 
-4. Build and upload to the ESP32 using PlatformIO.
+4. Baue das Projekt und lade es auf den ESP32 hoch.
 
-## Usage
+## Verwendung
 
-- Power the ESP32 and wait for it to connect to Wi-Fi.
-- Press the refresh button to fetch the latest task list from the API.
-- Use the other buttons to scroll through tasks.
-- The display shows:
-  - Task ID
-  - Task title
-  - Completion status
-  - Current task index / total tasks
+- Schalte den ESP32 ein und warte, bis er sich mit dem WLAN verbindet.
+- Drücke die Aktualisieren-Taste, um die neueste Aufgabenliste von der API zu laden.
+- Verwende die anderen Tasten, um durch die Aufgaben zu blättern.
+- Das Display zeigt an:
+  - Aufgaben-ID
+  - Aufgabentitel
+  - Erledigt-Status
+  - Aktuelle Aufgabe / Gesamtanzahl
 
-## JSON API Format
+## JSON-API-Format
 
-The API should return a JSON array of task objects, for example:
+Die API sollte ein JSON-Array von Aufgabenobjekten zurückliefern, zum Beispiel:
 
 ```json
 [
-  {"id": 1, "title": "Buy groceries", "checked": false},
-  {"id": 2, "title": "Clean room", "checked": true}
+  {"id": 1, "title": "Lebensmittel kaufen", "checked": false},
+  {"id": 2, "title": "Zimmer aufräumen", "checked": true}
 ]
 ```
 
-## Notes
+## Hinweise
 
-- The display is initialized using `display.begin(0x3C, true)` for SH1106.
-- The code currently does not send updates back to the API; it only reads task data.
-- The initial Wi-Fi password is currently blank in the source; set the password if needed.
+- Das Display wird für SH1106 mit `display.begin(0x3C, true)` initialisiert.
+- Der Code sendet derzeit keine Änderungen an die API zurück; er liest nur die Aufgabe.
+- Das WLAN-Passwort ist in der Quelle derzeit leer; setze das Passwort bei Bedarf.
 
-## License
+## Lizenz
 
-This repository does not include a license file. Add one if you want to permit reuse.
+Dieses Repository enthält keine Lizenzdatei. Füge eine hinzu, wenn du die Wiederverwendung erlauben möchtest.
