@@ -1,8 +1,6 @@
 from fastapi import FastAPI
 from db_manager import *
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 
 # Beispielnutzung der Funktionen
 
@@ -34,9 +32,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/") # definiert den Endpunkt /, der die Startseite der API darstellt
-async def root(): # definiert die Funktion root, die eine einfache Nachricht zurückgibt,
-    return FileResponse("index.html") # die die index.html Datei zurückgibt, die die Startseite der API darstellt
+
+
 
 @app.get("/get_tasks") # definiert den Endpunkt /get_tasks, den der Kenny im Frontend benutzt um die Tasks aus der Datenbank zu holen
 async def get_tasks():  # definiert die Funktion get_Tasks
@@ -100,5 +97,3 @@ if __name__ == "__main__":
 
     # Start the server on 127.0.0.1:8000
     uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
-
-app.mount("/", StaticFiles(directory="/home/ronnyr/Documents/taskManager", html=True), name="static")
