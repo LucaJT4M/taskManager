@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from db_manager import *
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 # Beispielnutzung der Funktionen
 
@@ -99,3 +100,5 @@ if __name__ == "__main__":
 
     # Start the server on 127.0.0.1:8000
     uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
+
+app.mount("/", StaticFiles(directory="/home/ronnyr/Documents/taskManager", html=True), name="static")
