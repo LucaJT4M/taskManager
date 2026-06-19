@@ -14,7 +14,7 @@ Adafruit_SH1106G display(128, 64, &Wire, -1);
 #define button_refresh 17
 #define button_two 15
 #define button_three 16
-
+#define led 19
 
 void write_to_monitor(String text) {
     display.clearDisplay();
@@ -29,6 +29,7 @@ void setup() {
   pinMode(button_refresh, INPUT_PULLUP);
   pinMode(button_two, INPUT_PULLUP);
   pinMode(button_three, INPUT_PULLUP);
+  pinMode(led, OUTPUT);
   
   // SH1106 nutzt eine leicht andere Initialisierung:
   if(!display.begin(0x3C, true)) { 
@@ -99,6 +100,7 @@ std::vector<Task> parse_list_from_json(const String& json) {
     if (error) {
         Serial.print("JSON parse failed: ");
         Serial.println(error.c_str());
+
         return tasks;
     }
 
@@ -159,10 +161,12 @@ String get_tasks_from_api() {
     String payload = http.getString();
     Serial.println("Response:");
     Serial.println(payload);
+    digitalWrite(led, LOW);
     http.end();
     return payload;
   } else {
     Serial.printf("Request failed: %s\n", http.errorToString(httpCode).c_str());
+    digitalWrite(led, HIGH);
     http.end();
     return "";
   }
